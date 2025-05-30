@@ -1,0 +1,116 @@
+// Keywords: migration, dispersal
+
+initialize() {
+	
+	// Run time contraints
+	defineConstant("START_TIME", clock("mono"));
+	defineConstant("MAX_RUNTIME_HOURS", 96);
+
+	// Define checkpoint filename
+	defineConstant("CHECKPOINT_FILE", d_checkpoint_file);
+	
+	// Population genetic parameters
+	initializeMutationRate(u * 0.5);
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, 1e5);
+	initializeRecombinationRate(r);
+	defineConstant("Ne", 20*N*n_demes);
+}
+1 early() {
+	subpopCount = n_demes;
+	for (i in 1:subpopCount)
+		sim.addSubpop(i, min_k);
+	for (i in 1:subpopCount)
+		for (j in 1:subpopCount)
+			if (i != j)
+				sim.subpopulations[i-1].setMigrationRates(j, m / (n_demes - 1));
+	print(c("total cycles == ", Ne));
+}
+
+1 late() {
+	// Check if checkpoint file exists
+	if (CHECKPOINT_FILE != "/dev/null") {
+		if (fileExists(CHECKPOINT_FILE)) {
+			// Start from checkpoint
+			sim.readFromPopulationFile(CHECKPOINT_FILE);
+			catn("Loaded checkpoint from: " + CHECKPOINT_FILE);
+		}
+	}
+}
+
+early() {
+	
+	if(sim.cycle % 2 == 1){
+		sim.subpopulations.setSubpopulationSize(N);
+	}
+	
+	if(sim.cycle % 2 == 0){
+		sim.subpopulations.setSubpopulationSize(min_k);
+	}
+
+}
+
+late(){
+
+	if (sim.cycle % 2000 == 0) {
+		// Calculate elapsed time in hours
+		elapsed = ((clock("mono") - START_TIME) / 3600.0);
+
+        print("Time: " + elapsed + " Cycle: " + sim.cycle);
+		
+		// If we're approaching the time limit
+		if (elapsed >= MAX_RUNTIME_HOURS) {
+			
+			// Write to temp output file
+			outBase = outdir + "rep_" + replicate + "_temp_output";
+			
+			// Save population state
+			sim.outputFull(outBase + ".txt");
+			
+			print("Checkpoint created at cycle: " + sim.cycle);
+			print("Time elapsed: " + elapsed);
+			print("N at checkpoint: " + p1.individualCount);
+			print("The last base in the chromosome: " + sim.chromosome.lastPosition);
+			print("Output written to: " + outBase  + ".txt");
+			
+			// Exit the simulation
+			sim.simulationFinished();
+		}
+	}
+	
+	if(sim.cycle % 2e3 == 0 & sim.cycle > (2e7 - 10 * 2e3)){
+		
+		mean_piS = 0;
+		
+		for (deme in sim.subpopulations){
+			piS = calcHeterozygosity(deme.genomes);
+			mean_piS = mean_piS + piS;
+		}
+
+		mean_piS = mean_piS / length(sim.subpopulations);
+		
+		piT = calcHeterozygosity(sim.subpopulations.genomes);
+
+        writeFile(
+            paste0(outdir, "rep_", replicate, "stats_pairwise.csv"),
+            paste(sim.cycle, //generation
+            m,  //migration rate
+            min_k, // k 
+            piS, // piS
+            piT, // piT
+            sep = ","
+            ),
+            append = T);
+
+		sim.subpopulations.genomes.outputVCF(filePath = paste0(outdir, "rep_", replicate, "_generation_", sim.cycle, ".vcf"));
+	}
+
+}
+
+
+20000001 late() {
+writeFile(outdir + "rep_" + replicate + "_completed.txt",
+		  "completed");
+sim.simulationFinished();
+}
