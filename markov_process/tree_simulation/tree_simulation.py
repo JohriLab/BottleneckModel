@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--num-samples', type=int, default=50)
     parser.add_argument('--plot', action='store_true', help='Generate tree plot')
     parser.add_argument('--plot-file', default='tree_simulation', help='Output plot filename')
+    parser.add_argument('--folded', action='store_true', help='Fold the SFS')
     args = parser.parse_args()
 
     # Run the simulation
@@ -31,13 +32,15 @@ def main():
     print(f"Total edges: {len(edges_df)}")
     
     # Plot the tree if requested
-    sfs = calc_SFS_from_edges(edges_df, args.num_samples)  
+    sfs = calc_SFS_from_edges(edges_df, args.num_samples, args.folded)  
     plot_tree_and_sfs(edges_df, sfs, save_file=args.plot_file+'/combined_plot.png')
 
-    E_T_vectorized = calc_T_matrix_vectorized(edges_df, args.num_samples)
-    print("E[T] =", E_T_vectorized)
-    print("E[pi] =", E_T_vectorized*2*args.u)
-    print("E[pi] (SFS) =", calc_pi_from_SFS(sfs, args.num_samples, args.u))
+    # E_T_vectorized = calc_T_matrix_vectorized(edges_df, args.num_samples)
+    # print("E[T] =", E_T_vectorized)
+    # print("E[pi] =", E_T_vectorized*2*args.u)
+    E_pi_SFS = calc_pi_from_SFS(sfs, args.num_samples, args.u)
+    print("E[pi] (SFS) =", E_pi_SFS)
+    # print("Error =", E_T_vectorized*2*args.u - E_pi_SFS)
 
 if __name__ == "__main__":
     main()
