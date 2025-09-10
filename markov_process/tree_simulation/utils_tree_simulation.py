@@ -6,6 +6,7 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import networkx as nx
+from itertools import combinations
 
 def simulate_tree(k, m, N, d, num_samples):
     '''simulate a coalescent tree with migration, deme drift, and coalescence'''
@@ -20,8 +21,7 @@ def simulate_tree(k, m, N, d, num_samples):
     Returns:
         edges_df: DataFrame with edge list
     '''
-    alpha = 2*m*(1-m)
-    beta = (1 - m)**2 + 2*m*(1-m)*(d-2)/(d-1) + m**2*(d-2)/(d-1)
+
     p_coal = 1 - (1-1/k)*(1-1/N)
     
     sample_id = 0
@@ -31,7 +31,7 @@ def simulate_tree(k, m, N, d, num_samples):
             'id': sample_id,
             'deme': random.randint(1, d),
             'time': 0,
-            'leaves_below': 1  # Each sample has 1 leaf below it
+            'leaves_below': 1
         })
         sample_id += 1
 
@@ -68,7 +68,6 @@ def simulate_tree(k, m, N, d, num_samples):
         new_samples = []
         for deme, deme_samples in deme_groups.items():
             if len(deme_samples) > 1:
-                from itertools import combinations
                 coalescing_pairs = []
                 
                 for pair in combinations(deme_samples, 2):
@@ -76,33 +75,27 @@ def simulate_tree(k, m, N, d, num_samples):
                         coalescing_pairs.append(pair)
                 
                 if coalescing_pairs:
-                    # Find unique subsets of individuals in overlapping pairs
-                    components = []
+                    # Use the simple NetworkX approach just for component finding
+                    G = nx.Graph()
                     for pair in coalescing_pairs:
-                        merged = False
-                        for i, component in enumerate(components):
-                            pair_ids = {lineage['id'] for lineage in pair}
-                            component_ids = {lineage['id'] for lineage in component}
-                            
-                            if pair_ids & component_ids:
-                                all_lineages = component + list(pair)
-                                seen_ids = set()
-                                unique_lineages = []
-                                for lineage in all_lineages:
-                                    if lineage['id'] not in seen_ids:
-                                        unique_lineages.append(lineage)
-                                        seen_ids.add(lineage['id'])
-                                components[i] = unique_lineages
-                                merged = True
-                                break
-                        
-                        if not merged:
-                            components.append(list(pair))
+                        G.add_edge(pair[0]['id'], pair[1]['id'])
+                    
+                    components = list(nx.connected_components(G))
+                    
+                    # Convert back to sample objects
+                    sample_components = []
+                    for component in components:
+                        sample_component = []
+                        for node_id in component:
+                            for sample in deme_samples:
+                                if sample['id'] == node_id:
+                                    sample_component.append(sample)
+                                    break
+                        sample_components.append(sample_component)
                     
                     # Create coalescent nodes for each component
                     coalesced_lineages = set()
-                    for component in components:
-                        # Calculate total leaves below this coalescent node
+                    for component in sample_components:
                         total_leaves = sum(lineage['leaves_below'] for lineage in component)
                         
                         # Create coalescent node
@@ -124,7 +117,7 @@ def simulate_tree(k, m, N, d, num_samples):
                                 'branch_length': branch_length,
                                 'coalescence_time': current_time,
                                 'deme': deme,
-                                'leaves_below': child['leaves_below']  # Track leaves below each edge
+                                'leaves_below': child['leaves_below']
                             })
                             coalesced_lineages.add(child['id'])
                     
