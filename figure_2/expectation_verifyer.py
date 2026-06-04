@@ -29,7 +29,6 @@ def analytical_expectations(k, m, d, N):
     alpha = 2*m*(1-m)
     T_0 = (N*(alpha*d*k - alpha*d + k))/(N + k - 1)
     T_1 = (N*alpha*d*k - N*alpha*d + N*d + N*k - alpha*d*k + alpha*d + d*k - d - k)/(N+k-1)
-    # T_T = (N*(alpha*d*k - alpha*d + k) + (1 - 1/d)*(N*d - alpha*d*k + alpha*d + d*k - d - k))/(N + k - 1)
     T_T = (N*d*(alpha*d*(k-1) + d + k - 1) + (d-1)*((1-alpha)*d*(k-1) - k ))/(d*(N + k - 1))
 
     return T_0, T_1, T_T
