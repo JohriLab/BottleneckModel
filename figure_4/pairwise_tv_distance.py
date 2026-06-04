@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib
 
 # ============================================================================
 # PARAMETERS - Edit these values to change plot settings
@@ -8,12 +9,12 @@ import pandas as pd
 # Define sets of (d, k) values to compute total variation distance for
 d_values = [2, 5, 10, 50, 100, 500, 1000, 5000, 10000]  # d values to test
 k_values = [2, 5, 10, 50, 100, 500, 1000, 5000, 10000]      # k values to test
-T_max = 1000000  # Maximum time T to compute distributions for
-m = 0.0002  # migration rate parameter for full_model_distribution
-# d_values = [1000, 5000, 9500, 9900]  # d values to test
-# k_values = [100, 500, 5000, 9000]      # k values to test
 # T_max = 1000000  # Maximum time T to compute distributions for
 # m = 0.0002  # migration rate parameter for full_model_distribution
+# d_values = [1000, 5000, 9500, 9900]  # d values to test
+# k_values = [100, 500, 5000, 9000]      # k values to test
+T_max = 1000000  # Maximum time T to compute distributions for
+m = 0.0002  # migration rate parameter for full_model_distribution
 N = 1e10  # deme size for full_model_distribution
 # ============================================================================
 
@@ -263,7 +264,17 @@ def main():
     
     print('\n\nPivot table (d rows, k columns):')
     print(pivot_table.to_string())
-
+    
+    # # Save to CSV
+    # csv_file = 'tv_distance_table.csv'
+    # df.to_csv(csv_file, index=False)
+    # print(f'\n\nTable saved to {csv_file}')
+    
+    # # Save pivot table to CSV
+    # pivot_csv_file = 'tv_distance_pivot_table.csv'
+    # pivot_table.to_csv(pivot_csv_file)
+    # print(f'Pivot table saved to {pivot_csv_file}')
+    
     # Create and save heatmap visualization
     print('\nCreating heatmap visualization...')
     plot_tv_distance_heatmap(pivot_table, 'tv_distance_heatmap.png')

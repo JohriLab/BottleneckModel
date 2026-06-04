@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
 import argparse
@@ -145,17 +143,8 @@ def _annotate_param_combo(ax, label, fontsize):
     )
 
 
-def _plot_sfs_on_ax(
-    ax,
-    mean_sfs_sim,
-    sd_sfs_sim,
-    kingman_sfs,
-    x,
-    fontsize=FIG_FONT_SIZE,
-    ylabel=True,
-    xlabel=True,
-    yscale="linear",
-):
+def _plot_sfs_on_ax(ax, mean_sfs_sim, sd_sfs_sim, kingman_sfs, x,
+                    fontsize=FIG_FONT_SIZE, ylabel=True, xlabel=True):
     """Draw simulation vs Kingman SFS on a matplotlib Axes."""
     cap = max(2, int(round(fontsize / 6)))
     ax.bar(
@@ -172,10 +161,7 @@ def _plot_sfs_on_ax(
         linewidth=0,
         alpha=1.0,
         marker='o',
-        markerfacecolor='none',
-        markeredgecolor='#FF8C00',
-        markeredgewidth=1.8,
-        markersize=7.5,
+        markersize=max(4, int(round(fontsize / 2.5))),
         capsize=cap,
         elinewidth=1,
     )
@@ -189,27 +175,10 @@ def _plot_sfs_on_ax(
         ax.set_ylabel('')
     ax.tick_params(axis='both', labelsize=fontsize)
     ax.ticklabel_format(axis='y', style='plain', useOffset=False)
-    if yscale == "log":
-        ax.set_yscale("log", nonpositive="clip")
-        y_all = np.concatenate([np.asarray(mean_sfs_sim).ravel(), np.asarray(kingman_sfs).ravel()])
-        y_pos = y_all[np.isfinite(y_all) & (y_all > 0)]
-        if y_pos.size:
-            ax.set_ylim(bottom=max(0.8 * float(np.min(y_pos)), 1e-12))
 
 
-def plot_sfs_comparison(
-    mean_sfs_sim,
-    sd_sfs_sim,
-    kingman_sfs,
-    x,
-    d_val,
-    k_val,
-    m_val,
-    num_samples,
-    u,
-    output_file,
-    yscale="linear",
-):
+def plot_sfs_comparison(mean_sfs_sim, sd_sfs_sim, kingman_sfs, x, d_val, k_val, m_val,
+                        num_samples, u, output_file):
     """
     Create a comparison plot of simulation SFS vs Kingman SFS.
     
@@ -225,7 +194,7 @@ def plot_sfs_comparison(
     """
     fontsize = FIG_FONT_SIZE
     fig, ax = plt.subplots(figsize=(6, 4.5))
-    _plot_sfs_on_ax(ax, mean_sfs_sim, sd_sfs_sim, kingman_sfs, x, fontsize=fontsize, yscale=yscale)
+    _plot_sfs_on_ax(ax, mean_sfs_sim, sd_sfs_sim, kingman_sfs, x, fontsize=fontsize)
     _annotate_param_combo(ax, _param_combo_label(d_val, k_val, m_val), fontsize)
     plt.tight_layout()
     _savefig(output_file)
@@ -233,7 +202,7 @@ def plot_sfs_comparison(
     print(f"Plot saved: {output_file}")
 
 
-def plot_sfs_grid(df, panels, output_file, input_label='', yscale="linear"):
+def plot_sfs_grid(df, panels, output_file, input_label=''):
     """
     2x2 grid of SFS comparisons; each panel is one (d, k, m) triple.
 
@@ -286,7 +255,7 @@ def plot_sfs_grid(df, panels, output_file, input_label='', yscale="linear"):
         xlabel = idx not in (0, 1)
         _plot_sfs_on_ax(
             ax, mean_sfs_sim, sd_sfs_sim, kingman_sfs, x,
-            fontsize=fontsize, ylabel=ylabel, xlabel=xlabel, yscale=yscale,
+            fontsize=fontsize, ylabel=ylabel, xlabel=xlabel,
         )
         _panel_label_outside_top_left(ax, panel_letter, fontsize)
         _annotate_param_combo(ax, _param_combo_label(d_val, k_val, m_val, tv_distance=tv_distance), fontsize)
@@ -303,10 +272,9 @@ def plot_sfs_grid(df, panels, output_file, input_label='', yscale="linear"):
             marker='o',
             linestyle='None',
             color='#FF8C00',
-            markerfacecolor='none',
+            markerfacecolor='#FF8C00',
             markeredgecolor='#FF8C00',
-            markeredgewidth=1.8,
-            markersize=7.5,
+            markersize=max(4, int(round(fontsize / 2.5))),
             label='Kingman',
         ),
     ]
@@ -353,12 +321,6 @@ def main():
                        help='Input JSONL file with simulation results')
     parser.add_argument('--output', type=str, default=None,
                        help='Output path, e.g. .pdf (required for --grid; default for single plot)')
-    parser.add_argument(
-        '--yscale',
-        choices=('linear', 'log'),
-        default='linear',
-        help="Y-axis scale for SFS plots (default: linear).",
-    )
     
     args = parser.parse_args()
 
@@ -379,7 +341,7 @@ def main():
         out_dir = os.path.dirname(args.output)
         if out_dir and not os.path.exists(out_dir):
             os.makedirs(out_dir)
-        plot_sfs_grid(df, panels, args.output, input_label=args.input_file, yscale=args.yscale)
+        plot_sfs_grid(df, panels, args.output, input_label=args.input_file)
         return
 
     if args.k is None or args.d is None:
@@ -434,7 +396,7 @@ def main():
     # Create plot
     plot_sfs_comparison(
         mean_sfs_sim, sd_sfs_sim, kingman_sfs,
-        x, args.d, args.k, args.m, num_samples, u, output_file, yscale=args.yscale
+        x, args.d, args.k, args.m, num_samples, u, output_file
     )
 
 
