@@ -79,7 +79,7 @@ def calculate_expected_times(k, m, d, N, u):
     T_T = T_S/d + T_B*(1-1/d)
 
     p = 1/d
-    var_T = (2*N_matrix - I) * expected_times - expected_times * expected_times
+    var_T = (2*N_matrix - I) @ expected_times - expected_times * expected_times
     var_T_S = var_T[0, 0]
     var_T_B = var_T[1, 0]
     var_T_T = p*var_T_S + (1 - p)*var_T_B + p*(1 - p)*(T_S - T_B)**2
