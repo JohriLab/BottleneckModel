@@ -290,7 +290,7 @@ def create_plot_with_transformed_x(df, k_values, d, N, u, num_samples, plot_file
         axes[1, col].grid(True, alpha=0.3)
         
         # Plot 3: FST
-        axes[2, col].plot(x_fine, theory_fst, color=fst_color, linewidth=line_width)
+        # axes[2, col].plot(x_fine, theory_fst, color=fst_color, linewidth=line_width)
         axes[2, col].errorbar(x_empirical, df_k['FST'], yerr=0,
                             fmt='o', color=emp_color, capsize=5)
         axes[2, col].set_xlabel(x_label, fontsize=font_size)
@@ -553,7 +553,7 @@ def run_analysis(k_values=[10], d=1000, N=1000, u=1e-6, num_samples=1000,
             axes[1, col].grid(True, alpha=0.3)
             
             # Plot 3: FST
-            axes[2, col].plot(m_fine, theory_fst, color=fst_color, linewidth=line_width)
+            # axes[2, col].plot(m_fine, theory_fst, color=fst_color, linewidth=line_width)
             axes[2, col].errorbar(df_k['m'], df_k['FST'], yerr=0,
                                 fmt='o', color=emp_color, capsize=5)
             axes[2, col].set_xlabel('$m$', fontsize=font_size)
@@ -587,7 +587,7 @@ def run_analysis(k_values=[10], d=1000, N=1000, u=1e-6, num_samples=1000,
 
 def main():
     parser = argparse.ArgumentParser(description='backward coalescent simulation')
-    parser.add_argument('--k', type=int, nargs='+', default=[1, 2, 5, 100], 
+    parser.add_argument('--k', type=int, nargs='+', default=[1, 2, 5, 10], 
                        help='k values to analyze (can specify multiple, e.g., --k 5 10 20)')
     parser.add_argument('--d', type=int, default=100)
     parser.add_argument('--N', type=int, default=1e10)
